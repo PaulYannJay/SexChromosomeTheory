@@ -371,3 +371,7 @@ recombination() { //Define special recombination pattern depending on mutation (
 	else
 		{ return T;} // A least one recombination event was suppressed
 	}
+
+	// Usage :
+	//
+	//parallel -j20 ~/Software/SLiM/build/slim -d N={1} -d mu=1e-08  -d r=1e-5 -d rep={2} -d s={4} -d MaxSizeInv={3} ScriptFormationXYChromosome_XY.slim  ::: 1000 ::: {1..5} ::: 20000000  :::  -0.0001 -0.001 -0.05 -0.01
