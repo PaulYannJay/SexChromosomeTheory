@@ -8,8 +8,10 @@ ModelDeterministic.R
 
 # For figure 2b-c, run the simulation
  #in a bash terminal:
- >source ParalleleWhileLoop_IndivSimulPlot_XY.sh #Source the launching file
+ >source ParalleleWhileLoop\_IndivSimulPlot\_XY.sh #Source the launching file
+
  >export -f slimFc #Export its function
+
  >parallel -j30 slimFc ::: 1e-08 ::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 ::: {1..10000} ::: 5000000 15000000 ::: 500000 2000000 1000000 5000000 ::: Y X ### Run on 30 cores, 10000 inversion per parameter combination, with one h and five possible s, inversions of 4 different sizes are considered, either on a X-bearing genome or in a Y-bearing genome, and either in the sex-chromosome (Mid position of the inversion at 5000000) or in the autosome (Mid position of the inversion at 15000000)
 # To produce the plots, merge the output file (for instance for 2Mb inversions, Figure 3b)
  >cat N=*Inv=4000001-6000001*_XY.txt >> Linked_2MbInv_IntroduceInvFromInit_Nmut_Freq_Fit_IndivPlot_MidSDR_XY.txt
