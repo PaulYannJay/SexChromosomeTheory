@@ -3,47 +3,49 @@ initialize() {
 	// set the overall mutation rate
 	initializeMutationRate(mu);
 	// m1 mutation type: neutral
-	initializeMutationType("m1", h, "f", s);
-	initializeMutationType("m2", 0.5, "f", 0);// mutation defining mating type locus 1
-	initializeMutationType("m4", 0.5, "f", 0);// mutation defining inversion 1
+	initializeMutationType("m1", h, "f", s); // Deleterious recessive mutations
+	initializeMutationType("m2", 0.5, "f", 0);// Sex-determining mutations 
+	initializeMutationType("m4", 0.5, "f", 0);// mutation defining inversion marker
 
 	// g1 genomic element type: uses m1 for all mutations
 	initializeGenomicElementType("g1", m1, 1.0);
 
-	// uniform chromosome of length 2000 kb for two chromosome
-	initializeGenomicElement(g1, 0,19999999);
+	//20Mb for two chromosome
+	initializeGenomicElement(g1, 0,19999999); 
 
 
 	// uniform recombination along two chromosomes
-	rates=c(r, 0.5, r);//Two chromosomes with R=1e-8	
-    ends=c(9999999,10000000,19999999); //Two chromosome of size 1000000	
+	rates=c(r, 0.5, r);//Two chromosomes with r=r	
+    ends=c(9999999,10000000,19999999); //Two chromosome of size 10Mb	
 	initializeRecombinationRate(rates, ends);
-	initializeSex("A");
+	initializeSex("A"); //Initialyse Sex.
 }
-// create a population of 500 individuals
+// create a population of N individuals
 1 late(){
-	sim.addSubpop("p1", N);
-	defineConstant("simID", getSeed());
-	i = p1.individuals;
-	i[i.sex == "M"].genome2.addNewDrawnMutation(m2, 5000000);
+	sim.addSubpop("p1", N);//Add a population if size N
+	defineConstant("simID", getSeed()); //Simulation ConstantName
+	i = p1.individuals; //AllSampleof the population
+	i[i.sex == "M"].genome2.addNewDrawnMutation(m2, 5000000); //Introduce the sex-determining mutation in all males.
 }
 
 2:15000	modifyChild(p1) { //simulating the meeting between two gamete and fecondation depand on their genotype
-	numY = sum(child.genomes.containsMarkerMutation(m2, 5000000));
+	numY = sum(child.genomes.containsMarkerMutation(m2, 5000000)); //Number of sex-determining mutation in the produced child
 	// no individual should have more than one Y
 	if (numY > 1)
-		stop("### ERROR: got too many Ys");
+		stop("### ERROR: got too many Ys"); //If the sample have two Y, something is going wrong.
 	// females should have 0 Y's
-	if (child.sex == "F" & numY > 0)
+	if (child.sex == "F" & numY > 0) //Females must be without the Y sex-determining mutations
 		return F;
 	// males should have 1 Y
-	if (child.sex == "M" & numY == 0)
+	if (child.sex == "M" & numY == 0) //Males must have one Y.
 		return F;
 	return T;
 }
 
-15000 late() {
-sim.outputFull("../InitialState/slim_g15000_MidSDR_10MChrom_XY_N=" + N + "_r=" + r + "_u=" + mu + "_s=" + s + "_h=" + h + "_" + simID + ".txt");
+15000 late() { //Run for 15000 generation
+sim.outputFull("../InitialState/slim_g15000_MidSDR_10MChrom_XY_N=" + N + "_r=" + r + "_u=" + mu + "_s=" + s + "_h=" + h + "_" + simID + ".txt"); //Write Output
 sim.simulationFinished();
 }
+// To run this script in parallel : example for performing simulations with varying dominance and selective coefficients 
+// parallel -j9 slim -d N=10000 -d mu=1e-8 -d h={1} -d s={2} -d r=1e-6 -d rep=1 ScriptNeutralInversion_DefineInitialState_XY.slim ::: 0.001 0.01 0.1 ::: -0.01 -0.05 -0.1
 
