@@ -1,9 +1,10 @@
+//In this file, we let evolve a population with a XY sex-determining system. Two files are produced. One is the position and frequency of inversions at different generation. The other is the recombination rate at different position at different generation .
 // set up a simple neutral simulation
 initialize() {
 	// set the overall mutation rate
 	initializeMutationRate(mu);
 	// m1 mutation type: neutral
-	initializeMutationType("m10", 0, "g", s, 0.2); //mutation sampled among a gamma dsitribution
+	initializeMutationType("m10", 0, "g", s, 0.2); //mutation effect sampled among a gamma distribution. Different type mutation with different dominance are defined
 	initializeMutationType("m11", 0.001, "g", s, 0.2);
 	initializeMutationType("m12", 0.01, "g", s, 0.2);
 	initializeMutationType("m13", 0.1, "g", s, 0.2);
@@ -23,71 +24,60 @@ initialize() {
 	rates=c(r, 0.5, r);//Two chromosomes with R=1e-8	
     ends=c(99999999,100000000,199999999); //Two chromosome of size 100000000	
 	initializeRecombinationRate(rates, ends);
-	initializeSex("A");
-	defineConstant("InvArray",matrix(c(1,1,1), nrow=1));
+	initializeSex("A"); //Define sexes
+	defineConstant("InvArray",matrix(c(1,1,1), nrow=1)); //Defined a constant that is an array containing inversion position and frequencies
 }
-// create a population of 500 individuals
+// create a population of N individuals
 1 late(){
-	cat("sisi");
-	sim.addSubpop("p1", N);
+	sim.addSubpop("p1", N); //Population of size N
 	i = p1.individuals;
-	i[i.sex == "M"].genome2.addNewDrawnMutation(m2, 50000000);
+	i[i.sex == "M"].genome2.addNewDrawnMutation(m2, 50000000);//Introduce the sex-determing mutation.
 }
 
 2:115000	modifyChild(p1) { //simulating the meeting between two gamete and fecondation depand on their genotype
-	numY = sum(child.genomes.containsMarkerMutation(m2, 50000000));
+	numY = sum(child.genomes.containsMarkerMutation(m2, 5000000)); //Number of sex-determining mutation in the produced child
 	// no individual should have more than one Y
 	if (numY > 1)
-		stop("### ERROR: got too many Ys");
+		stop("### ERROR: got too many Ys"); //If the sample have two Y, something is going wrong.
 	// females should have 0 Y's
-	if (child.sex == "F" & numY > 0)
+	if (child.sex == "F" & numY > 0) //Females must be without the Y sex-determining mutations
 		return F;
 	// males should have 1 Y
-	if (child.sex == "M" & numY == 0)
+	if (child.sex == "M" & numY == 0) //Males must have one Y.
 		return F;
 	return T;
 }
 
-15000:115000 early() { //introducing inversion regularly
-//15000:115000 early() { //introducing inversion regularly
-	if (sim.generation % 10 == 0) //every 30 generation
+15000:115000 early() { //starting at generation 15000, introduce one inversion every generation. 
+	if (sim.generation % 1 == 0) //Every generation
 		{
-		cat(sim.generation + "\n");
-		}
-	if (sim.generation % 1 == 0) //every 30 generation
-		{
-		/// Check if all work ///
-		//Mut1=sim.countOfMutationsOfType(m12);
-		//cat(Mut1 + "\n");
-		///
-		Array=InvArray;//Copy into an array the array containing inversion	
-		posGross=sample(0:199,1); //Position of the inversion marker // Since their is a maximum range size of 10M, we defined the inversion position by sample two vector
+		Array=InvArray;//Copy into an array the constant array containing inversion	
+		posGross=sample(0:199,1); //Position of the inversion marker // Since in Eidos, their is a maximum range size of 10M, we defined the inversion position by sampling two vectors
 		posSmall=sample(1:1000000,1); //Position of the inversion marker
-		pos=posGross * 1000000 + posSmall;
+		pos=posGross * 1000000 + posSmall; //Mid position of the inversion
 		sample(p1.genomes, 1).addNewDrawnMutation(m4, pos); //introduce a new inversion
-		MaxInvStart=asInteger(pos-(MaxSizeInv/2));//Defined max inversion size
-		MaxInvEnd=asInteger(pos+(MaxSizeInv/2));
-		if (pos > 100000000) // correct inversion size to ensure they do not span two chromosome
+		MaxInvStart=asInteger(pos-(MaxSizeInv/2));//Define the minimum position for the inversion start 
+		MaxInvEnd=asInteger(pos+(MaxSizeInv/2));//Define the maximum position for the inversion end 
+		if (pos > 100000000) // correct inversion possible position to ensure they do not span two chromosome // for inversion on chromosome 2
 			{
-			if (MaxInvStart <100000000)
+			if (MaxInvStart <100000000) // if the inversion start on chromosome 1, correct it 
 				{MaxInvStart=100000000;}
-			if (MaxInvEnd >199999999)
+			if (MaxInvEnd >199999999) //If the inversion end is outside the genome range, correct it
 				{MaxInvEnd=199999999;}
 			}
-		else
+		else // Same thing for chromosome 1
 			{
 			if (MaxInvStart <0)
 				{MaxInvStart=0;}
 			if (MaxInvEnd >99999999)
 				{MaxInvEnd=99999999;}
 			}
-		InvStart=sample(MaxInvStart:pos, 1); //Define Inversion Position
-		InvEnd=sample(pos:MaxInvEnd, 1);
-		Array=rbind(Array,c(pos, InvStart, InvEnd));//Push the new inversion into the inversion arrays
+		InvStart=sample(MaxInvStart:pos, 1); //Sample an inversion start
+		InvEnd=sample(pos:MaxInvEnd, 1); //Sample an inversion end 
+		Array=rbind(Array,c(pos, InvStart, InvEnd));//Push the new inversion into the inversion arrays with its caracteristics
 		MatBool=c(); //Vector to define lost and non-lost inversion
-		for (Inv in 0:(nrow(Array)-1)) //for each inversion 
+		for (Inv in 0:(nrow(Array)-1)) //for each inversion existing in the arrays
 			{
-			//	InvPos=Array[Inv,0];
 			InvPos=drop(Array[Inv,0]); //Get its position 
 			InvStart=drop(Array[Inv,1]);
 			InvEnd=drop(Array[Inv,2]);
@@ -96,18 +86,12 @@ initialize() {
 			p__ = sum(p == 0); //Indiv with no Inversion
 			pI_ = sum(p == 1); //hetero
 			pII = sum(p == 2); //Homo
-//			cat("Inversion " + InvStart + "-" + InvEnd + ":\t"); //print output
-//			cat(format("%3d", p__) + " -- ");
-//			cat(format("%3d", pI_) + " I- ");
-//			cat(format("%3d", pII) + " II ");
-			p1GenYBool = p1.individuals.genomes.containsMarkerMutation(m2, 50000000);//Boolean to define chromosome type
-			p1GenY = p1.individuals.genomes[p1GenYBool]; //YChrom
-			p1GenX = p1.individuals.genomes[!p1GenYBool];//Xchrom
-			p1GenY_WithInv=sum(p1GenY.containsMarkerMutation(m4,InvPos)); //Number of Ychrom with the inversion
-			p1GenX_WithInv=sum(p1GenX.containsMarkerMutation(m4,InvPos)); // Same with Xchrom
-			//cat(format("%3d", p1GenY_WithInv) + " Y ");
-			//cat(format("%3d", p1GenX_WithInv) + " X\n");
-				if( p__ == N) //If nobody harbor the inversion (All sample are homozygous without
+			p1GenYBool = p1.individuals.genomes.containsMarkerMutation(m2, 50000000);//Boolean to define chromosome with the sex-determining mutation Y
+			p1GenY = p1.individuals.genomes[p1GenYBool]; // Y Chrom
+			p1GenX = p1.individuals.genomes[!p1GenYBool];// X chrom
+			p1GenY_WithInv=sum(p1GenY.containsMarkerMutation(m4,InvPos)); //Number of Y-bearing genomes with the inversion
+			p1GenX_WithInv=sum(p1GenX.containsMarkerMutation(m4,InvPos)); // Same with X-bearing genomes 
+				if( p__ == N) //If nobody harbor the inversion (All sample are homozygous without inversion), the inversion have been lost
 				{
 				MatBool=c(MatBool,F); //Write in the Boolean vector F
 				}
@@ -116,59 +100,52 @@ initialize() {
 					MatBool=c(MatBool,T);//Write in the Boolean vector T
 				}
 
-			if (sim.generation % 1000 == 0) //every 30 generation
+			if (sim.generation % 1000 == 0) //every 1000 generation, print the inversion frequency
 				{
 				writeFile(paste(c("../Output/N=",N,"_u=",mu, "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_InvFreq_IndivSimulation_XY.txt"), sep=""), paste(InvStart + "\t" + InvEnd+ "\t" + p__ + "\t"+pI_ + "\t"+pII+ "\t"+p1GenY_WithInv + "\t"+p1GenX_WithInv), append=T);
 				}
 			}
-		Array=Array[MatBool,]; //edit array to suppress Lost inversion
-		rm("InvArray",removeConstants=T); // Suppress the Constant Inversion array
+		Array=Array[MatBool,]; //edit array to suppress the inversions that have been lost.
+		rm("InvArray",removeConstants=T); // Suppress the constant Inversion array
 		defineConstant("InvArray",Array); //replace it by the new array
-		//line=paste(c(N,"\t", mu,"\t",r,"\t",h,"\t",s,"\t",sim.generation,"\t",start,"\t",end,"\t",rep,"\t",Freq4, "\t", meanNbMutInv, "\t", meanNbMutNoInv, "\t", sdNbMutInv, "\t", sdNbMutNoInv, "\t", meanFitnessInvHetero, "\t", meanFitnessInvHomo, "\t", meanFitnessNoInv, "\t", sdFitnessInvHetero, "\t", sdFitnessInvHomo, "\t", sdFitnessNoInv)); //output the frequency of a given mutation
-			if (sim.generation % 1000 == 0) //every 30 generation
+			if (sim.generation % 1000 == 0) //every 1000 generation, juste write the generations
 			{
 			writeFile(paste(c("../Output/N=",N,"_u=",mu, "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_InvFreq_IndivSimulation_XY.txt"), sep=""), paste("Generation:\t" + sim.generation), append=T);
 			}
 		}
 	}
 
-2:115000 late() { //introducing inversion regularly
-	if (sim.generation % 1000 == 0) //every 30 generation
+2:115000 late() { 
+	if (sim.generation % 1000 == 0) //every 1000 generation, write the genetation in the recombination file.
 		{
 		writeFile(paste(c("../Output/N=",N,"_u=",mu, "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_Nrecomb_IndivSimulation_XY.txt"), sep=""), paste("Generation:\t" + sim.generation), append=T);
 		}
 	}
 
-// run to generation 1000
-//10000 late() {
 115000 late() {
-allIndividuals = sim.subpopulations.individuals;
-sampledIndividuals = sample(allIndividuals, 10);// Sample 10 individual
-p1.outputVCFSample(30, filePath=paste(c("../Output/N=",N,"_u=",mu, "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_IndivSimulation_XY.vcf"), sep=""));//to use a string variable : slim  -d "output='test2.txt'" ScriptNeutralInversionAggregate.slim
-
 sim.simulationFinished();
 }
 
 recombination() { //Define special recombination pattern depending on mutation (inversion) presence
 	Bool=0; // Used to check if something happens (Recombination event suppressed or not
-	for (Inv in 0:(nrow(InvArray)-1)) //For all Inv
+	for (Inv in 0:(nrow(InvArray)-1)) //For all Inversion
 		{
-		if (size(breakpoints)>1) // If this sample experimented a recombination somewhere (Used to check if there is still some recombination event --> all can be suppressed by previous inversion)
+		if (size(breakpoints)>1) // If this sample experienced more than 1 recombination event somewhere (Used to check if there is still some recombination event --> all recombination may have been suppressed by previous inversions)
 			{
-			pos=InvArray[Inv,0]; // grep Inversion infos
+			pos=InvArray[Inv,0]; // grep Inversion infos (position, start, end)
 			start=InvArray[Inv,1];
 			end=InvArray[Inv,2];
 			if (genome1.containsMarkerMutation(m4, pos) != genome2.containsMarkerMutation(m4, pos)) //if the mutation associated with inversion is found only in one of the two genome
 				{ 
-				inInv = (breakpoints > start) & (breakpoints < end); // Check if recombination breakpoint fall in the inversion (bool vector)
+				inInv = (breakpoints > start) & (breakpoints < end); // Check if a recombination breakpoint fall in the inversion (bool vector)
 				if (any(inInv)) //If a recombination breakpoint fall in the inversion breakpoint, 
 					{
-					breakpoints = breakpoints[!inInv]; //If not, this recombination can't occur
+					breakpoints = breakpoints[!inInv]; //This recombination can't occur
 					Bool=1;
 					}
 				}
 			}
-		else //If all recombination event have been suppressed, Slim bug. Thus defined a recombination even at chromosome end //Probably useless
+		else //If all recombination event have been suppressed, SLiM bug. Thus, lets define a recombination even at chromosome end when suppressing the last recombination of a sample//Probably useless
 			{
 			pos=InvArray[Inv,0];
 			start=InvArray[Inv,1];
@@ -184,7 +161,7 @@ recombination() { //Define special recombination pattern depending on mutation (
 				}
 			}
 		}
-	if (sim.generation % 1000 == 0) //every 10 generation
+	if (sim.generation % 1000 == 0) //every 1000 generations, output the number of recombination event every 1Mb
 		{
 		inChr10 = sum((breakpoints >= 0) & (breakpoints < 1000000));
 		inChr11 = sum((breakpoints >= 1000000) & (breakpoints < 2000000));
@@ -386,7 +363,7 @@ recombination() { //Define special recombination pattern depending on mutation (
 		inChr207 = sum((breakpoints >= 197000000) & (breakpoints < 198000000));
 		inChr208 = sum((breakpoints >= 198000000) & (breakpoints < 199000000));
 		inChr209 = sum((breakpoints >= 199000000) & (breakpoints < 200000000));
-		writeFile(paste(c("../Output/N=",N,"_u=",mu , "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_Nrecomb_IndivSimulation_XY.txt"), sep=""), paste(c("Recombination:\t",inChr10,"\t",inChr11,"\t",inChr12,"\t",inChr13,"\t",inChr14,"\t",inChr15,"\t",inChr16,"\t",inChr17,"\t",inChr18,"\t",inChr19,"\t",inChr20,"\t",inChr21,"\t",inChr22,"\t",inChr23,"\t",inChr24,"\t",inChr25,"\t",inChr26,"\t",inChr27,"\t",inChr28,"\t",inChr29,"\t",inChr30,"\t",inChr31,"\t",inChr32,"\t",inChr33,"\t",inChr34,"\t",inChr35,"\t",inChr36,"\t",inChr37,"\t",inChr38,"\t",inChr39,"\t",inChr40,"\t",inChr41,"\t",inChr42,"\t",inChr43,"\t",inChr44,"\t",inChr45,"\t",inChr46,"\t",inChr47,"\t",inChr48,"\t",inChr49,"\t",inChr50,"\t",inChr51,"\t",inChr52,"\t",inChr53,"\t",inChr54,"\t",inChr55,"\t",inChr56,"\t",inChr57,"\t",inChr58,"\t",inChr59,"\t",inChr60,"\t",inChr61,"\t",inChr62,"\t",inChr63,"\t",inChr64,"\t",inChr65,"\t",inChr66,"\t",inChr67,"\t",inChr68,"\t",inChr69,"\t",inChr70,"\t",inChr71,"\t",inChr72,"\t",inChr73,"\t",inChr74,"\t",inChr75,"\t",inChr76,"\t",inChr77,"\t",inChr78,"\t",inChr79,"\t",inChr80,"\t",inChr81,"\t",inChr82,"\t",inChr83,"\t",inChr84,"\t",inChr85,"\t",inChr86,"\t",inChr87,"\t",inChr88,"\t",inChr89,"\t",inChr90,"\t",inChr91,"\t",inChr92,"\t",inChr93,"\t",inChr94,"\t",inChr95,"\t",inChr96,"\t",inChr97,"\t",inChr98,"\t",inChr99,"\t",inChr100,"\t",inChr101,"\t",inChr102,"\t",inChr103,"\t",inChr104,"\t",inChr105,"\t",inChr106,"\t",inChr107,"\t",inChr108,"\t",inChr109,"\t",inChr110,"\t",inChr111,"\t",inChr112,"\t",inChr113,"\t",inChr114,"\t",inChr115,"\t",inChr116,"\t",inChr117,"\t",inChr118,"\t",inChr119,"\t",inChr120,"\t",inChr121,"\t",inChr122,"\t",inChr123,"\t",inChr124,"\t",inChr125,"\t",inChr126,"\t",inChr127,"\t",inChr128,"\t",inChr129,"\t",inChr130,"\t",inChr131,"\t",inChr132,"\t",inChr133,"\t",inChr134,"\t",inChr135,"\t",inChr136,"\t",inChr137,"\t",inChr138,"\t",inChr139,"\t",inChr140,"\t",inChr141,"\t",inChr142,"\t",inChr143,"\t",inChr144,"\t",inChr145,"\t",inChr146,"\t",inChr147,"\t",inChr148,"\t",inChr149,"\t",inChr150,"\t",inChr151,"\t",inChr152,"\t",inChr153,"\t",inChr154,"\t",inChr155,"\t",inChr156,"\t",inChr157,"\t",inChr158,"\t",inChr159,"\t",inChr160,"\t",inChr161,"\t",inChr162,"\t",inChr163,"\t",inChr164,"\t",inChr165,"\t",inChr166,"\t",inChr167,"\t",inChr168,"\t",inChr169,"\t",inChr170,"\t",inChr171,"\t",inChr172,"\t",inChr173,"\t",inChr174,"\t",inChr175,"\t",inChr176,"\t",inChr177,"\t",inChr178,"\t",inChr179,"\t",inChr180,"\t",inChr181,"\t",inChr182,"\t",inChr183,"\t",inChr184,"\t",inChr185,"\t",inChr186,"\t",inChr187,"\t",inChr188,"\t",inChr189,"\t",inChr190,"\t",inChr191,"\t",inChr192,"\t",inChr193,"\t",inChr194,"\t",inChr195,"\t",inChr196,"\t",inChr197,"\t",inChr198,"\t",inChr199,"\t",inChr200,"\t",inChr201,"\t",inChr202,"\t",inChr203,"\t",inChr204,"\t",inChr205,"\t",inChr206,"\t",inChr207,"\t",inChr208,"\t",inChr209), sep=""), append=T);
+		writeFile(paste(c("../Output/N=",N,"_u=",mu , "_r=",r,"_mean_s=", s,"_MaxSizeInv=",MaxSizeInv, "_Rep_", rep, "_Nrecomb_IndivSimulation_XY.txt"), sep=""), paste(c("Recombination:\t",inChr10,"\t",inChr11,"\t",inChr12,"\t",inChr13,"\t",inChr14,"\t",inChr15,"\t",inChr16,"\t",inChr17,"\t",inChr18,"\t",inChr19,"\t",inChr20,"\t",inChr21,"\t",inChr22,"\t",inChr23,"\t",inChr24,"\t",inChr25,"\t",inChr26,"\t",inChr27,"\t",inChr28,"\t",inChr29,"\t",inChr30,"\t",inChr31,"\t",inChr32,"\t",inChr33,"\t",inChr34,"\t",inChr35,"\t",inChr36,"\t",inChr37,"\t",inChr38,"\t",inChr39,"\t",inChr40,"\t",inChr41,"\t",inChr42,"\t",inChr43,"\t",inChr44,"\t",inChr45,"\t",inChr46,"\t",inChr47,"\t",inChr48,"\t",inChr49,"\t",inChr50,"\t",inChr51,"\t",inChr52,"\t",inChr53,"\t",inChr54,"\t",inChr55,"\t",inChr56,"\t",inChr57,"\t",inChr58,"\t",inChr59,"\t",inChr60,"\t",inChr61,"\t",inChr62,"\t",inChr63,"\t",inChr64,"\t",inChr65,"\t",inChr66,"\t",inChr67,"\t",inChr68,"\t",inChr69,"\t",inChr70,"\t",inChr71,"\t",inChr72,"\t",inChr73,"\t",inChr74,"\t",inChr75,"\t",inChr76,"\t",inChr77,"\t",inChr78,"\t",inChr79,"\t",inChr80,"\t",inChr81,"\t",inChr82,"\t",inChr83,"\t",inChr84,"\t",inChr85,"\t",inChr86,"\t",inChr87,"\t",inChr88,"\t",inChr89,"\t",inChr90,"\t",inChr91,"\t",inChr92,"\t",inChr93,"\t",inChr94,"\t",inChr95,"\t",inChr96,"\t",inChr97,"\t",inChr98,"\t",inChr99,"\t",inChr100,"\t",inChr101,"\t",inChr102,"\t",inChr103,"\t",inChr104,"\t",inChr105,"\t",inChr106,"\t",inChr107,"\t",inChr108,"\t",inChr109,"\t",inChr110,"\t",inChr111,"\t",inChr112,"\t",inChr113,"\t",inChr114,"\t",inChr115,"\t",inChr116,"\t",inChr117,"\t",inChr118,"\t",inChr119,"\t",inChr120,"\t",inChr121,"\t",inChr122,"\t",inChr123,"\t",inChr124,"\t",inChr125,"\t",inChr126,"\t",inChr127,"\t",inChr128,"\t",inChr129,"\t",inChr130,"\t",inChr131,"\t",inChr132,"\t",inChr133,"\t",inChr134,"\t",inChr135,"\t",inChr136,"\t",inChr137,"\t",inChr138,"\t",inChr139,"\t",inChr140,"\t",inChr141,"\t",inChr142,"\t",inChr143,"\t",inChr144,"\t",inChr145,"\t",inChr146,"\t",inChr147,"\t",inChr148,"\t",inChr149,"\t",inChr150,"\t",inChr151,"\t",inChr152,"\t",inChr153,"\t",inChr154,"\t",inChr155,"\t",inChr156,"\t",inChr157,"\t",inChr158,"\t",inChr159,"\t",inChr160,"\t",inChr161,"\t",inChr162,"\t",inChr163,"\t",inChr164,"\t",inChr165,"\t",inChr166,"\t",inChr167,"\t",inChr168,"\t",inChr169,"\t",inChr170,"\t",inChr171,"\t",inChr172,"\t",inChr173,"\t",inChr174,"\t",inChr175,"\t",inChr176,"\t",inChr177,"\t",inChr178,"\t",inChr179,"\t",inChr180,"\t",inChr181,"\t",inChr182,"\t",inChr183,"\t",inChr184,"\t",inChr185,"\t",inChr186,"\t",inChr187,"\t",inChr188,"\t",inChr189,"\t",inChr190,"\t",inChr191,"\t",inChr192,"\t",inChr193,"\t",inChr194,"\t",inChr195,"\t",inChr196,"\t",inChr197,"\t",inChr198,"\t",inChr199,"\t",inChr200,"\t",inChr201,"\t",inChr202,"\t",inChr203,"\t",inChr204,"\t",inChr205,"\t",inChr206,"\t",inChr207,"\t",inChr208,"\t",inChr209), sep=""), append=T); // Write the number of recombination event in each sample at each position
 		}
 		
 	if (Bool==0)
