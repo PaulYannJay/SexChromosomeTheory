@@ -12,9 +12,9 @@ First, produce the initiation files (population states after 15,000 generations)
 
 > mkdir ../InitialState #Create a directory for saving files
 
-> parallel -j9 slim -d N=10000 -d mu=1e-8 -d h={1} -d s={2} -d r=1e-6 -d rep=1 ScriptNeutralInversion\_DefineInitialState\_XY.slim :::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 #Run on 9 cores, 1 inversion per parameter combination, with various selection coefficient (one h and five possible s) 
+> parallel -j9 slim -d N=10000 -d mu=1e-8 -d h={1} -d s={2} -d r=1e-6 -d rep=1 ScriptNeutralInversion\_DefineInitialState\_XY.slim :::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 #Run on 9 cores, 1 simulation per parameter combination, with various selection coefficients (one h and five possible s) 
 
-Then, for each parameter combination, run 10,000 simulations (10,000 inversions) using the appropriate initial state.
+Then, for each parameter combination, run 10,000 simulations (10,000 inversions) using the right initial state.
 
 > mkdir ../Output
 
