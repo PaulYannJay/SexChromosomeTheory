@@ -23,7 +23,7 @@ Then, for each parameter combination, run 10,000 simulations (10,000 inversions)
  >export -f slimFc #Export its function
 
  >parallel -j30 slimFc ::: 1e-08 ::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 ::: {1..10000} ::: 5000000 15000000 ::: 500000 2000000 1000000 5000000 ::: Y X ### Run on 30 cores, 10000 inversion per parameter combination, with one h and five possible s, inversions of 4 different sizes are considered, either on a X-bearing genome or in a Y-bearing genome, and either in the sex-chromosome (Mid position of the inversion at 5000000) or in the autosome (Mid position of the inversion at 15000000)
-## To produce the plots, merge the output file (for instance for 2Mb inversions, Figure 3b)
+## To produce the plots, merge the output file (for instance for 2Mb inversions, Figure 2b)
  >cat N=\*Inv=4000001-6000001\*\_XY.txt >> Linked\_2MbInv\_IntroduceInvFromInit\_Nmut\_Freq\_Fit\_IndivPlot\_MidSDR\_XY.txt
 
  >cat N=\*Inv=14000001-16000001\*\_XY.txt >> Unlinked\_2MbInv\_IntroduceInvFromInit\_Nmut\_Freq\_Fit\_IndivPlot\_MidSDR\_XY.txt
