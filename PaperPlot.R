@@ -14,26 +14,22 @@ library(directlabels)
 options(scipen=999)
 
 #### Fig 2 ###
-#### Fig 2_XY ###
+### Time simulation , Fig 2a
 
-### Deterministe ##
-### Time simulation , Fig 2a_XY
-###
-
-Col=scales::viridis_pal(begin=0, end=0.6, option="A")(2)
-Data_Y=read.table("~/Analysis/DelSheltering/Output/TimeSimul_h_s_u1e-8_cM_PapData_2MbInv_0.80_Fl_XYsyst_Y_BC.txt", stringsAsFactors = F, header = T)
+Col=scales::viridis_pal(begin=0, end=0.6, option="A")(2) #Color used
+Data_Y=read.table("TimeSimul_h_s_u1e-8_cM_PapData_2MbInv_0.80_Fl_XYsyst_Y_BC.txt", stringsAsFactors = F, header = T)
 FocS=c(0.01,0.1) #Focus on two s value
 Data_Y=Data_Y[Data_Y$s %in% FocS,]
 Data_Y$r=Data_Y$r*100 # Change recombination rate to distance in centimorgan
 FocR=c(0,50)
-Data_Y=Data_Y[Data_Y$r %in% FocR,] #Focus on fully linked or fully unlinked inversion
+Data_Y=Data_Y[Data_Y$r %in% FocR,] #Focus on fully linked or fully unlinked inversions
 Data_Y$Chrom="Y-linked"
-Data_Y[Data_Y$r==50,]$Chrom="Autosomal" #Full unlinked inversion are considered to be on autosome
+Data_Y[Data_Y$r==50,]$Chrom="Autosomal" #Full unlinked inversions are considered to be on autosome
 
-Data=Data_Y
-Data$Freq=Data$FYI+Data$FXI #Overall frequency of the inversion
 
-base=ggplot(Data)
+Data_Y$Freq=Data_Y$FYI+Data_Y$FXI #Overall frequency of the inversion
+
+base=ggplot(Data_Y)
 PlotA=base+
   geom_hline(yintercept = 0, linetype=2, size=0.1)+
   geom_line(aes(x=time, y=Freq, linetype=as.factor(h), color=Chrom), size=1, alpha=0.6)+
@@ -64,20 +60,20 @@ save_plot("Fig2a.png", PlotA, nrow=2)
 ### Fig 2B ###
 
 Simul=read.table(paste("LinkedAndUnlinked_2MbInv_IntroduceInvFromInit_Nmut_Freq_Fit_IndivPlot_MidSDR_XY.txt",sep=""), stringsAsFactors = F)
-colnames(Simul)=c("N", "u", "r", "h", "s", "Gen", "DebInv", "FinInv","Chrom", "Rep", "MutInv", "FreqMutInv", "InvFit", "MutNoInv","FreqMutNoInv","NoInvFit","Freq")
-Simul=Simul[!(Simul$DebInv>10000000 & Simul$Chrom=="Y"),] # 20000 inversion are run in autosome. Removing here all the inversion that were introduce in Y-bearing slim genome but totally unlinked to the Y allele, to get 10000 inversion
-Simul[Simul$DebInv>10000000,]$Chrom="Autosome" #Inversion on chromosome 2 are unlinked to the Sex-determining loci, therefore in an autosome
+colnames(Simul)=c("N", "u", "r", "h", "s", "Gen", "DebInv", "FinInv","Chrom", "Rep", "MutInv", "FreqMutInv", "InvFit", "MutNoInv","FreqMutNoInv","NoInvFit","Freq") #Create header
+Simul=Simul[!(Simul$DebInv>10000000 & Simul$Chrom=="Y"),] # 20000 inversions are simulated in autosome. Removing here all the inversion that were introduce in a Y-bearing slim genome but totally unlinked to the Y allele, to get 10000 inversion
+Simul[Simul$DebInv>10000000,]$Chrom="Autosome" #Inversions on chromosome 2 are unlinked to the sex-determining loci, therefore in an autosome
 Simul=Simul[!Simul$Chrom=="X",] #For the main plot, do not consider inversion linked to the X allele
-Simul[Simul$Chrom=="Y",]$Freq=Simul[Simul$Chrom=="Y",]$Freq*4 #Multiply Y-inversion frequency by four to get the overall frequency
+Simul[Simul$Chrom=="Y",]$Freq=Simul[Simul$Chrom=="Y",]$Freq*4 #Multiply the overal Y-inversion frequency by four to get the frequency of the inverersion among proto-Y chromosomes
 Simul$InvSize=Simul$FinInv - Simul$DebInv  #Inversion size
-SimulSub=Simul
-SimulSub=SimulSub[!(SimulSub$Freq==0.0),] #Remove generation were inversion fall at 0 frequency
+SimulSub=Simul #Duplicate data, just in case...
+SimulSub=SimulSub[!(SimulSub$Freq==0.0),] #Remove generations were inversion fall at 0 frequency
 SimulSub$Code=paste(SimulSub$u,SimulSub$r,SimulSub$h,SimulSub$s,SimulSub$DebInv,SimulSub$FinInv,SimulSub$Chrom, SimulSub$Rep, sep="_") #Define a code for every simulation
 FocS=c(-0.01,-0.1) #Focus on two s value
 SimulSub=SimulSub[SimulSub$s %in% FocS,] 
-SimulSub20G=unique(SimulSub[SimulSub$Gen>15020,]$Code) #Consider only inversion not lost after 20 generation.
-SimulSub=SimulSub[SimulSub$Code %in% SimulSub20G,] 
-summarySub=ddply(SimulSub, .(Code), summarize, LastFreq=last(Freq), maxGen=max(Gen)) #Summarize what happened to inversion maximum frequency or the generation when they were lost or fixed
+SimulSub20G=unique(SimulSub[SimulSub$Gen>15020,]$Code) #Consider only inversion not lost after 20 generation. #Here grep their code
+SimulSub=SimulSub[SimulSub$Code %in% SimulSub20G,]  #Here, do the subset
+summarySub=ddply(SimulSub, .(Code), summarize, LastFreq=last(Freq), maxGen=max(Gen)) #Summarize what happened to each inversions: maximum frequency they reach and the last generation where they where observed (25000 in case of still segregatig inversion, less than 25000 for inversion lost or fixed). Note tha
 #Since we ended simulation when the inversions were fixed of lost (this allows to save much time), for plotting purpose we need to recreate the end of these simulation --> in both case, the frequency of these fixed or lost simulationmust have been the same for the rest of the simulations, being either 1 or 0
 LostSimulSub=summarySub[summarySub$maxGen<25000,]$Code # Code of Inversion that have been lost or fixed (since we ended simulation when this occured)
 GoodSimulSub=SimulSub #Keep only non-lost Inversion

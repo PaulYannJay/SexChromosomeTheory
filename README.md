@@ -25,7 +25,7 @@ ModelDeterministic.R
 
  >cat N=\*\_XY.txt >> AllInv\_LinkedAndUnlinked\_IntroduceInvFromInit\_Nmut\_Freq\_Fit\_IndivPlot\_MidSDR\_XY.tx
 
-# Script for the formation of sexChromosome (Figure 3)
+# Script for the formation of Sex-Chromosomes (Figure 3)
 Usage :
 >parallel -j20 ~/Software/SLiM/build/slim -d N={1} -d mu=1e-08  -d r=1e-5 -d rep={2} -d s={4} -d MaxSizeInv={3} ScriptFormationXYChromosome\_VarGamma.slim  ::: 1000 ::: {1..5} ::: 20000000  :::  -0.0001 -0.001 -0.05 -0.01 ### Run on 20 cores. With a maximum inversion size of 20Mb, population of 1000 individuals, and the gamma parameter (for selection coefficient) taking four possible value. For each gamma value, run five simulations. 
 
