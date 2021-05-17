@@ -7,7 +7,9 @@ ModelDeterministic.R
 
 ## For figure 2b-c, run the simulation
 #in a bash terminal:
+
 First, produce the initiation files (population states after 15,000 generations)
+
 > mkdir ../InitialState #Create a directory for saving files
 
 > parallel -j9 slim -d N=10000 -d mu=1e-8 -d h={1} -d s={2} -d r=1e-6 -d rep=1 ScriptNeutralInversion\_DefineInitialState\_XY.slim :::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 #Run on 9 cores, 1 inversion per parameter combination, with various selection coefficient (one h and five possible s) 
