@@ -41,7 +41,8 @@ Usage :
 >parallel -j20 ~/Software/SLiM/build/slim -d N={1} -d mu=1e-08  -d r=1e-5 -d rep={2} -d s={4} -d MaxSizeInv={3} ScriptFormationXYChromosome\_VarGamma.slim  ::: 1000 ::: {1..5} ::: 20000000  :::  -0.0001 -0.001 -0.05 -0.01 ### Run on 20 cores. With a maximum inversion size of 20Mb, population of 1000 individuals, and the gamma parameter (for selection coefficient) taking four possible value. For each gamma value, run five simulations. 
 
 The outputs of the long simulation need to be parsed for plotting. For that, use the Parse\* files.
->./ParseInvFreqOutput.pl -i N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_Nrecomb\_IndivSimulation\_XY.txt -o N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_Nrecomb\_IndivSimulation\_XY.Parsed.txt
+
+>./ParseInvFreqOutput.pl -i N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_InvFreq\_IndivSimulation\_XY.txt -o N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_InvFreq\_IndivSimulation\_XY.Parsed.txt
 
 >./ParseRecombinationOutput.pl -i N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_Nrecomb\_IndivSimulation\_XY.txt -o N=1000\_u=1e-08\_r=1e-05\_MaxSizeInv=50000000\_Rep\_6\_Nrecomb\_IndivSimulation\_XY.Parsed.txt
 
