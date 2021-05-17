@@ -1,4 +1,4 @@
-This is the readme file to produce de main figures of the paper. Scripts for producing Supplementary figures are available upon request.
+This is the readme file to produce de main figures of the paper. Scripts for producing supplementary figures are available upon request.
 
 # Script for analysing the fate of inversion (Figure 2)
 ## Figure 2a
@@ -6,7 +6,16 @@ This is the readme file to produce de main figures of the paper. Scripts for pro
 ModelDeterministic.R
 
 ## For figure 2b-c, run the simulation
- #in a bash terminal:
+#in a bash terminal:
+First, produce the initiation files (population states after 15,000 generations)
+> mkdir ../InitialState #Create a directory for saving files
+
+> parallel -j9 slim -d N=10000 -d mu=1e-8 -d h={1} -d s={2} -d r=1e-6 -d rep=1 ScriptNeutralInversion\_DefineInitialState\_XY.slim :::: 0.5 ::: -0.005 -0.001 -0.01 -0.05 -0.1 #Run on 9 cores, 1 inversion per parameter combination, with various selection coefficient (one h and five possible s) 
+
+Then, for each parameter combination, run 10,000 simulations (10,000 inversions) using the appropriate initial state.
+
+> mkdir ../Output
+
  >source ParalleleWhileLoop\_IndivSimulPlot\_XY.sh #Source the launching file
 
  >export -f slimFc #Export its function

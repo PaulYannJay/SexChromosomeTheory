@@ -79,7 +79,7 @@ initialize() {
 	defineConstant("FitInv",meanFitnessInv); 
 }
 
-15000:25000	modifyChild(p1) { //simulating the meeting between two gamete and fecondation depand on their genotype
+15000:25000	modifyChild(p1) { //simulating the meeting between two gametes and fecondation depanding on their genotype
 	numY = sum(child.genomes.containsMarkerMutation(m2, 5000000)); //Number of sex-determining mutation in the produced child
 	// no individual should have more than one Y
 	if (numY > 1)
